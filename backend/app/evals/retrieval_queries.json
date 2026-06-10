@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "v1",
+  "description": "Retrieval eval set. Each query has a list of expected_substrings; a retrieved chunk is considered relevant if its `text` contains ANY of the substrings (case-insensitive). This is intentionally lenient — a chunker is not penalized for splitting a section differently as long as the answer text shows up.",
+  "queries": [
+    {
+      "id": "q01_battery_warranty_period",
+      "query": "What is the warranty period on a battery?",
+      "expected_substrings": [
+        "twelve (12) months from the date of purchase",
+        "Battery capacity is warranted at 70% of original",
+        "24 months OR 800 charge cycles",
+        "Battery capacity (≥70% of original)"
+      ],
+      "expected_kind": ["policy", "manual", "specs"]
+    },
+    {
+      "id": "q02_scratches_covered",
+      "query": "Are scratches and cosmetic damage covered under warranty?",
+      "expected_substrings": [
+        "Normal wear and tear",
+        "discoloration of components",
+        "excluded from the standard limited warranty"
+      ],
+      "expected_kind": ["policy"]
+    },
+    {
+      "id": "q03_shipping_damage_filing",
+      "query": "How long do I have to file a shipping damage claim?",
+      "expected_substrings": [
+        "within seven (7) days of delivery",
+        "Shipping Damage"
+      ],
+      "expected_kind": ["policy", "manual"]
+    },
+    {
+      "id": "q04_extended_damage_protection",
+      "query": "Is accidental damage covered if I crashed my bike?",
+      "expected_substrings": [
+        "Accidental Damage",
+        "Extended Damage Protection plan",
+        "collision, impact, dropping"
+      ],
+      "expected_kind": ["policy", "manual"]
+    },
+    {
+      "id": "q05_buyers_remorse_window",
+      "query": "Can I return the bike if I changed my mind?",
+      "expected_substrings": [
+        "fourteen (14) days from delivery",
+        "Buyer's Remorse",
+        "unused product in the original packaging"
+      ],
+      "expected_kind": ["policy"]
+    },
+    {
+      "id": "q06_required_claim_info",
+      "query": "What information do I need to file a warranty claim?",
+      "expected_substrings": [
+        "order number",
+        "serial number",
+        "Photographs documenting"
+      ],
+      "expected_kind": ["policy", "manual"]
+    },
+    {
+      "id": "q07_water_immersion_void",
+      "query": "What happens if I rode through a deep puddle?",
+      "expected_substrings": [
+        "Water Immersion",
+        "Submerging the bike",
+        "voids coverage"
+      ],
+      "expected_kind": ["policy", "manual"]
+    },
+    {
+      "id": "q08_third_party_charger",
+      "query": "Can I use a third-party charger?",
+      "expected_substrings": [
+        "non-PaceLine charger",
+        "third-party charger voids the warranty",
+        "third-party charger"
+      ],
+      "expected_kind": ["manual", "safety"]
+    },
+    {
+      "id": "q09_motor_wattage_levelup3",
+      "query": "What is the motor wattage of the LevelUp 3?",
+      "expected_substrings": [
+        "750 W mid-drive",
+        "750 W nominal / 1100 W peak",
+        "LevelUp HM-750"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q10_battery_capacity_paceline500",
+      "query": "What is the battery capacity of the PaceLine 500?",
+      "expected_substrings": [
+        "614 Wh",
+        "BAT-PACE",
+        "48 V / 12.8 Ah"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q11_error_code_e04",
+      "query": "What does error code E-04 mean?",
+      "expected_substrings": [
+        "Battery over-temperature",
+        "charging fault",
+        "E-04"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q12_error_code_f4_levelup",
+      "query": "What does the F4 fault code on the LevelUp 3 mean?",
+      "expected_substrings": [
+        "Battery over-temp or charge fault",
+        "F4",
+        "Failing BMS"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q13_charge_time_paceline",
+      "query": "How long does it take to charge a PaceLine 500 battery?",
+      "expected_substrings": [
+        "5.5 hours",
+        "PL-CHG-100",
+        "0–80%"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q14_max_rider_weight",
+      "query": "What is the maximum rider weight for the LevelUp 3?",
+      "expected_substrings": [
+        "150 kg",
+        "330 lb",
+        "Max rider weight"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q15_bms_export_required",
+      "query": "When do I need to provide a BMS export?",
+      "expected_substrings": [
+        "BMS export",
+        "battery capacity claim",
+        "subjective range estimate"
+      ],
+      "expected_kind": ["manual", "safety", "policy"]
+    },
+    {
+      "id": "q16_battery_storage_long_term",
+      "query": "How should I store the battery for the offseason?",
+      "expected_substrings": [
+        "50% charge",
+        "Long term",
+        "Storage",
+        "offseason"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q17_wear_items_list",
+      "query": "Which parts are considered wear items and not warranted?",
+      "expected_substrings": [
+        "Tires, brake pads, brake rotors, grips, chains, cables",
+        "wear items"
+      ],
+      "expected_kind": ["policy", "manual", "specs"]
+    },
+    {
+      "id": "q18_class_3_speed_limit",
+      "query": "What is the assist speed limit for a Class 3 e-bike?",
+      "expected_substrings": [
+        "28 mph",
+        "Class 3"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q19_pressure_washer",
+      "query": "Can I clean my e-bike with a pressure washer?",
+      "expected_substrings": [
+        "pressure washer",
+        "Do not"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q20_battery_swelling",
+      "query": "What should I do if the battery is swelling or hot?",
+      "expected_substrings": [
+        "swelling",
+        "Cell venting",
+        "removal from service",
+        "smoking"
+      ],
+      "expected_kind": ["safety", "manual"]
+    },
+    {
+      "id": "q21_serial_number_location",
+      "query": "Where is the serial number on the bike?",
+      "expected_substrings": [
+        "stamped under the bottom bracket",
+        "battery casing",
+        "Frame serial"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q22_paceline_500_torque",
+      "query": "What is the torque rating of the PaceLine 500 motor?",
+      "expected_substrings": [
+        "60 N·m",
+        "60 Nm"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q23_levelup3_brakes",
+      "query": "What brakes does the LevelUp 3 use?",
+      "expected_substrings": [
+        "Magura MT5e",
+        "4-piston",
+        "203 mm front"
+      ],
+      "expected_kind": ["manual", "specs"]
+    },
+    {
+      "id": "q24_compatible_battery",
+      "query": "Is BAT-PACE battery compatible with the LevelUp 3?",
+      "expected_substrings": [
+        "BAT-LEVEL battery will not physically fit",
+        "Compatible models",
+        "latch geometry differs"
+      ],
+      "expected_kind": ["specs", "manual"]
+    },
+    {
+      "id": "q25_modification_warranty",
+      "query": "Does modifying the controller void the warranty?",
+      "expected_substrings": [
+        "modification",
+        "Misuse",
+        "modify the motor controller"
+      ],
+      "expected_kind": ["policy", "manual"]
+    },
+    {
+      "id": "q26_appeal_denied_claim",
+      "query": "Can I appeal a denied warranty claim?",
+      "expected_substrings": [
+        "Appeals",
+        "thirty (30) days of the denial notice",
+        "different adjudicator"
+      ],
+      "expected_kind": ["policy"]
+    },
+    {
+      "id": "q27_fraud_review_triggers",
+      "query": "What triggers additional review of a claim?",
+      "expected_substrings": [
+        "Inconsistent shipping addresses",
+        "Additional Review",
+        "high-value items"
+      ],
+      "expected_kind": ["policy"]
+    },
+    {
+      "id": "q28_ul2849_scope",
+      "query": "What does UL 2849 cover for e-bikes?",
+      "expected_substrings": [
+        "UL 2849",
+        "electrical system as a whole",
+        "fire, electric shock"
+      ],
+      "expected_kind": ["safety"]
+    },
+    {
+      "id": "q29_charging_temperature",
+      "query": "At what temperature should I charge the battery?",
+      "expected_substrings": [
+        "Charge between 0 °C and 40 °C",
+        "Do not charge a frozen battery",
+        "0 °C and 45 °C"
+      ],
+      "expected_kind": ["manual"]
+    },
+    {
+      "id": "q30_cargo_rack_capacity",
+      "query": "How much weight can the rear rack carry on the PaceLine 500?",
+      "expected_substrings": [
+        "Cargo rack rating",
+        "25 kg"
+      ],
+      "expected_kind": ["manual", "specs"]
+    }
+  ]
+}

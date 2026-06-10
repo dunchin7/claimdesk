@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: claims_postgres
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: claims_copilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d claims_copilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-server:
+    # v2 is single-container (Postgres-only). v3 requires ClickHouse + Redis +
+    # blob storage which is overkill for local dev. Cloud or v3 self-host
+    # decision deferred to Week 16 — see DECISIONS.md.
+    image: langfuse/langfuse:2
+    container_name: claims_langfuse
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgres://dev:dev@postgres:5432/langfuse
+      NEXTAUTH_SECRET: dev-only-not-secret-please-change
+      NEXTAUTH_URL: http://localhost:3001
+      SALT: dev-only-not-secret-please-change
+      TELEMETRY_ENABLED: "false"
+
+volumes:
+  pgdata:

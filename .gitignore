@@ -1,0 +1,46 @@
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.uv-cache/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg-info/
+dist/
+build/
+
+# Synthetic / generated data (regeneratable; don't bloat the repo)
+data/synthetic/*.jsonl
+data/synthetic/*.csv
+data/synthetic/*.json
+# Note: data/policies/*.md is committed (hand-written policy is a real artifact)
+
+# Phase 4.1 real-claim data — PII-minimized but customer-derived. Never committed.
+data/real/
+
+# Models (trained binaries belong in object storage, not git)
+models/*.pkl
+models/*.bin
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Frontend (if/when added)
+node_modules/
+frontend/.next/
+frontend/out/
+
+# Week 9: trained-model metadata is small enough to commit if desired,
+# but the .pkl binaries (model weights) stay out of git.
+models/*.json
