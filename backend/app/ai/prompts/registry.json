@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Prompt registry. The single source of truth for which prompt versions are wired into production code paths. Validated at app startup.",
+  "active": {
+    "extract": {
+      "prompt": "extract_v2",
+      "model_alias": "extractor",
+      "schema": "ClaimExtraction",
+      "owner": "maintainer@example.com",
+      "notes": "Week 2 — 4 few-shot examples; 97.7% accuracy on golden set"
+    },
+    "adjudicate": {
+      "prompt": "adjudicate_v5",
+      "model_alias": "reasoner",
+      "schema": "Decision",
+      "owner": "maintainer@example.com",
+      "notes": "Adds the 'ambiguous-cause' needs_info trigger (electrical+water / structural+impact / range-without-measured-capacity) on top of v3's two triggers; lifted gray-stratum accuracy 12%->65%."
+    },
+    "draft_email": {
+      "prompt": "draft_email_v1",
+      "model_alias": "reasoner",
+      "schema": null,
+      "owner": "maintainer@example.com",
+      "notes": "Week 3 — free-form prose, T=0.4"
+    }
+  },
+  "history": [
+    {"prompt": "extract_v1", "retired": "2026-05-01", "reason": "Replaced by extract_v2 with expanded schema + few-shot examples"},
+    {"prompt": "adjudicate_v1", "retired": "2026-05-01", "reason": "54% accuracy; over-defaulted to needs_info. Replaced by adjudicate_v2."},
+    {"prompt": "adjudicate_v2", "retired": "2026-05-01", "reason": "72% accuracy; missed fraud signals. Replaced by adjudicate_v3 with fraud examples."},
+    {"prompt": "adjudicate_v4", "retired": "2026-05-24", "reason": "Built as the retrieval-grounded variant; eval'd at 69-76% vs adjudicate_v3's 80% on our 6KB single-policy corpus. Reverted to v3. Path remains in tree (USE_RETRIEVAL flag) for future re-enable when corpus scales."},
+    {"prompt": "adjudicate_v3", "retired": "2026-06-04", "reason": "Phase-3 baseline_v2 surfaced 15 needs_info→approve confusions concentrated in the gray stratum (electrical+rain, structural+terrain, range-without-capacity). v3's two needs_info triggers don't cover ambiguous-cause cases. Replaced by adjudicate_v5."}
+  ]
+}
