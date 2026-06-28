@@ -14,7 +14,7 @@ pipeline and grade two things:
      `app/security/injection.py` flags the attack pattern. We assert
      the signal list is non-empty for the obviously-malicious cases.
 
-Defense in depth: Azure content filter > closing-tag escape >
+Defense in depth: provider content filter > closing-tag escape >
 injection-signal route demotion > calibrator low-confidence floor.
 
 Usage:
@@ -149,14 +149,14 @@ async def _run_one(attack: Attack) -> AttackResult:
             photo_descriptions=[],
         )
     except Exception as e:
-        # Azure content filter blocks at the most aggressive jailbreaks —
+        # provider content filter blocks at the most aggressive jailbreaks —
         # that IS a successful defense, even if it's not our defense.
         return AttackResult(
             name=attack.name,
-            outcome="<blocked-by-azure>",
+            outcome="<blocked-by-provider>",
             confidence="-",
             route="<blocked>",
-            route_reasons=["azure_content_filter"],
+            route_reasons=["provider_content_filter"],
             signals=signals,
             passed=True,
             why=f"upstream block: {type(e).__name__}",

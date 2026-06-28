@@ -7,8 +7,7 @@ import structlog
 
 # Substring matches against the lowercased key. If any of these appears
 # anywhere in a log key, the value is redacted. Substring (not exact) so that
-# `azure_openai_embedding_api_key` and `azure_openai_api_key` both match
-# `api_key`.
+# keys like `openai_api_key` match `api_key`.
 _SENSITIVE_SUBSTRINGS = (
     "api_key",
     "secret",

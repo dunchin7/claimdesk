@@ -8,7 +8,7 @@ Produces a stratified golden set:
     10 fraud-suspect (orthogonal: each has a real decision label too)
 
 Two modes:
-    --llm   Uses Azure GPT-4o-mini to write customer narratives. Realistic
+    --llm   Uses OpenAI GPT-4o-mini to write customer narratives. Realistic
             but costs ~$0.05 per full run.
     (default) Template mode. Free, deterministic, fast. Identical metadata
             to LLM mode for the same seed.
@@ -443,7 +443,7 @@ def generate_claims(seed: int, n: int) -> list[GoldenClaim]:
 
 
 async def llm_rewrite_narratives(claims: list[GoldenClaim]) -> list[GoldenClaim]:
-    """Rewrite each claim's `raw_input` via Azure GPT-4o-mini to sound more
+    """Rewrite each claim's `raw_input` via OpenAI GPT-4o-mini to sound more
     natural. Metadata (decision, citation, etc.) is unchanged.
     """
     from app.ai.llm import chat  # noqa: PLC0415
@@ -473,7 +473,7 @@ async def llm_rewrite_narratives(claims: list[GoldenClaim]) -> list[GoldenClaim]
             print(f"[warn] LLM rewrite failed for {c.claim_id}: {e}", file=sys.stderr)
         return c
 
-    # Cap concurrency at 5 to be polite to Azure quotas.
+    # Cap concurrency at 5 to be polite to OpenAI quotas.
     sem = asyncio.Semaphore(5)
 
     async def gated(c: GoldenClaim) -> GoldenClaim:
@@ -525,14 +525,14 @@ def main() -> int:
     parser.add_argument(
         "--llm",
         action="store_true",
-        help="Rewrite narratives via Azure GPT-4o-mini for variety (~$0.05/run).",
+        help="Rewrite narratives via OpenAI GPT-4o-mini for variety (~$0.05/run).",
     )
     args = parser.parse_args()
 
     claims = generate_claims(seed=args.seed, n=args.n)
 
     if args.llm:
-        print(f"[info] Rewriting {len(claims)} narratives via Azure GPT-4o-mini...")
+        print(f"[info] Rewriting {len(claims)} narratives via OpenAI GPT-4o-mini...")
         claims = asyncio.run(llm_rewrite_narratives(claims))
 
     write_jsonl(args.out, claims)

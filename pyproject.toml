@@ -28,5 +28,5 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = [
-    "smoke: integration-style tests that hit Azure OpenAI (require .env to be filled)",
+    "smoke: integration-style tests that hit the OpenAI API (require .env to be filled)",
 ]

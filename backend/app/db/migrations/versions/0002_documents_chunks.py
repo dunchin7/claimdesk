@@ -21,7 +21,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-# Embedding dim — keep in sync with `Settings.azure_openai_embedding_dim`.
+# Embedding dim — keep in sync with `Settings.embedding_dim`.
 # Hardcoded here because Alembic migrations should be reproducible across
 # environments without runtime settings dependencies.
 EMBEDDING_DIM = 1536

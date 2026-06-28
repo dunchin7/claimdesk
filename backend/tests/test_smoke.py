@@ -1,7 +1,7 @@
-"""End-to-end smoke tests that hit Azure OpenAI.
+"""End-to-end smoke tests that hit the OpenAI API.
 
-Skipped automatically if AZURE_OPENAI_API_KEY / AZURE_OPENAI_ENDPOINT aren't
-set (see conftest.py). Mark all tests in this file with `@pytest.mark.smoke`.
+Skipped automatically if OPENAI_API_KEY isn't set (see conftest.py).
+Mark all tests in this file with `@pytest.mark.smoke`.
 
 Run explicitly:
     uv run pytest tests/test_smoke.py -v -m smoke
@@ -20,7 +20,7 @@ from app.main import app
 
 @pytest.mark.smoke
 async def test_chat_extractor_returns_pydantic() -> None:
-    """Single Azure call via the abstraction; expect a typed response."""
+    """Single OpenAI call via the abstraction; expect a typed response."""
     extraction = await chat(
         messages=[
             {
@@ -41,12 +41,12 @@ async def test_chat_extractor_returns_pydantic() -> None:
 
 @pytest.mark.smoke
 async def test_embed_returns_vectors_of_expected_dim() -> None:
-    """Single Azure embedding call against the embedding resource."""
+    """Single OpenAI embedding call via the abstraction."""
     vectors = await embed(
         ["My e-bike battery stopped holding a charge.", "Frame cracked at the down tube."]
     )
     assert len(vectors) == 2
-    expected_dim = get_settings().azure_openai_embedding_dim
+    expected_dim = get_settings().embedding_dim
     for v in vectors:
         assert len(v) == expected_dim
         assert all(isinstance(x, float) for x in v[:5])
@@ -54,7 +54,7 @@ async def test_embed_returns_vectors_of_expected_dim() -> None:
 
 @pytest.mark.smoke
 def test_extract_endpoint_e2e() -> None:
-    """POST /api/claims/extract round-trip against real Azure."""
+    """POST /api/claims/extract round-trip against the real API."""
     payload = {
         "raw_input": (
             "Hi, my LevelUp 3 battery is dead. Bought it 4 months ago and only "

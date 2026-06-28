@@ -108,7 +108,7 @@ async def run(
     if limit is not None:
         claims = claims[:limit]
 
-    # Bound concurrency so we don't trip Azure quotas.
+    # Bound concurrency so we don't trip API rate limits.
     sem = asyncio.Semaphore(concurrency)
 
     async def gated(claim: dict[str, Any]) -> tuple[dict[str, Any], Any]:

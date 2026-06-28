@@ -5,8 +5,8 @@ The first call downloads ~1.3GB of model weights to the FastEmbed cache
 (~/.cache/fastembed by default). Subsequent calls reuse the cache.
 
 We intentionally don't surface this through `app/ai/llm.py:embed()` —
-`embed()` is the Azure-managed path, and we want the comparison apples-to-
-apples: Azure for the production model, local for the open-model comparison.
+`embed()` is the OpenAI-managed path, and we want the comparison apples-to-
+apples: OpenAI for the production model, local for the open-model comparison.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ def _bge_model() -> "TextEmbedding":  # type: ignore[name-defined]
 def embed_bge(texts: Iterable[str]) -> list[list[float]]:
     """Embed an iterable of strings with the configured BGE model.
 
-    Returns vectors in the same order as input. Unlike Azure embeddings, the
+    Returns vectors in the same order as input. Unlike OpenAI embeddings, the
     BGE model has no input-batch cap — we still iterate in chunks of 32 to
     keep memory pressure predictable on the ONNX runtime.
     """

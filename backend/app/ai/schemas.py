@@ -162,6 +162,38 @@ class Decision(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Decision↔citation consistency (grounding step 2)
+# ---------------------------------------------------------------------------
+
+CitationVerdict = Literal["supports", "contradicts", "unrelated"]
+
+
+class CitationSupport(BaseModel):
+    """Verdict on whether a cited policy clause actually justifies the decision.
+
+    `verify_citation` confirms the cited clause is a real, verbatim substring
+    of the policy. It does NOT confirm the clause *justifies* the outcome — a
+    model can cite a real-but-irrelevant (or even contradictory) clause and
+    pass the substring check. This is grounding step 2 ("the value appears in
+    the quote") applied to a decision. Pairs with `prompts/verify_citation_v1.md`.
+    """
+
+    verdict: CitationVerdict = Field(
+        description=(
+            "supports = the clause logically justifies this outcome; "
+            "contradicts = the clause, read plainly, implies the opposite "
+            "outcome; unrelated = real policy text that doesn't bear on this "
+            "outcome."
+        ),
+    )
+    reasoning: str = Field(
+        description="One sentence: why the clause does or doesn't support the outcome.",
+        min_length=10,
+        max_length=400,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Week 8: Vision / damage assessment
 # ---------------------------------------------------------------------------
 

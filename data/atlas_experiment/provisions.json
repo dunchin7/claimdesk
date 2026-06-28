@@ -1,0 +1,43 @@
+{
+  "_note": "Hand-authored, human-auditable provision graphs for 3 real CE plans, derived from the atlas clauses (data/policies/ce_atlas_raw/). This is the 'compile the policy once' artifact system C uses. Each provision: id, type (coverage|exclusion|condition|limit), verbatim clause, applies_when (the fact pattern that makes it relevant), effect.",
+  "applecare": {
+    "plan_name": "AppleCare+ for iPhone",
+    "provisions": [
+      {"id": "AC-COV-defect", "type": "coverage", "clause": "repair the defect at no charge, using new parts or parts that are equivalent to new", "applies_when": "a hardware defect / spontaneous failure with no external cause, within term", "effect": "covers (no fee)"},
+      {"id": "AC-COV-adh", "type": "coverage", "clause": "accidental damage from handling resulting from an unexpected and unintentional external event", "applies_when": "damage from a drop, spill, or other unintentional external event", "effect": "covers, subject to service fee"},
+      {"id": "AC-COV-battery", "type": "condition", "clause": "less than eighty percent (80%)", "applies_when": "a battery capacity / degradation claim", "effect": "covered ONLY if measured capacity is below 80%; otherwise not a covered defect"},
+      {"id": "AC-FEE-adh", "type": "limit", "clause": "Screen-Only Damage: US$29; All Other Damage: US$99", "applies_when": "any approved ADH claim", "effect": "service fee applies"},
+      {"id": "AC-LIM-term", "type": "condition", "clause": "your Plan Term is two (2) years", "applies_when": "the device is older than 2 years from purchase", "effect": "no coverage after the 2-year term"},
+      {"id": "AC-EXC-theft", "type": "exclusion", "clause": "Theft and misplacement are not covered under this Plan", "applies_when": "the device was stolen, lost, or misplaced (and the customer is NOT on the Theft & Loss tier)", "effect": "excluded on the base plan"},
+      {"id": "AC-EXC-wear", "type": "exclusion", "clause": "normal wear and tear", "applies_when": "gradual deterioration from normal use (loose ports, minor degradation)", "effect": "excluded"},
+      {"id": "AC-EXC-intentional", "type": "exclusion", "clause": "reckless, abusive, willful or intentional conduct", "applies_when": "the damage was caused on purpose / by abuse", "effect": "excluded"},
+      {"id": "AC-EXC-cosmetic", "type": "exclusion", "clause": "cosmetic damage that does not affect functionality", "applies_when": "scratches/dents that do not impair function", "effect": "excluded"}
+    ]
+  },
+  "samsung": {
+    "plan_name": "Samsung Care+",
+    "provisions": [
+      {"id": "SS-COV-mech", "type": "coverage", "clause": "a mechanical or electrical failure or other defect", "applies_when": "spontaneous functional failure with no external cause", "effect": "covers"},
+      {"id": "SS-COV-adh", "type": "coverage", "clause": "a failure due to accidental damage from handling", "applies_when": "damage from a drop or spilled liquid (accident tier)", "effect": "covers, subject to fee"},
+      {"id": "SS-EXC-batteryleak", "type": "exclusion", "clause": "a leaking Product battery (or any other leaking substance on or within the Product)", "applies_when": "the battery is swollen/leaking, or internal liquid/corrosion is from a leaking battery", "effect": "excluded"},
+      {"id": "SS-EXC-cosmetic", "type": "exclusion", "clause": "Cosmetic damage, including but not limited to scratches, dents, or housing cracks", "applies_when": "scratches/dents/housing cracks that do not impair function", "effect": "excluded"},
+      {"id": "SS-EXC-intentional", "type": "exclusion", "clause": "Any intentional dishonest, fraudulent or criminal act", "applies_when": "damage caused on purpose", "effect": "excluded"},
+      {"id": "SS-EXC-theft", "type": "exclusion", "clause": "A Product that was lost, stolen or damaged (when Damage is not part of Your Coverage Type)", "applies_when": "the device was stolen or lost and the customer is NOT on the Theft & Loss tier", "effect": "excluded unless on the Theft & Loss tier"},
+      {"id": "SS-LIM-adh3", "type": "limit", "clause": "a maximum of three (3) accidental damage from handling claims applies in a 12-month period", "applies_when": "this would be the 4th+ ADH claim in 12 months", "effect": "over the limit; not payable"},
+      {"id": "SS-GAP-degradation", "type": "gap", "clause": "", "applies_when": "a gradual battery-degradation claim with no leak and no defect evidence", "effect": "the master terms do not address normal battery degradation -> ambiguous; needs human/diagnostic"}
+    ]
+  },
+  "allstate": {
+    "plan_name": "Allstate Protection Plan (SquareTrade)",
+    "provisions": [
+      {"id": "AL-COV-breakdown", "type": "coverage", "clause": "Standard Plans cover product breakdowns and malfunctions during normal use", "applies_when": "spontaneous functional failure", "effect": "covers"},
+      {"id": "AL-COV-adh", "type": "coverage", "clause": "life's accidents like drops and spills", "applies_when": "drop/spill/immersion damage (Accident Plan)", "effect": "covers, $149 deductible (phones)"},
+      {"id": "AL-COND-30day", "type": "condition", "clause": "An Allstate Protection Plan must be bought within 30 days of item purchase", "applies_when": "the plan was purchased more than 30 days after the item", "effect": "plan is ineligible / not valid"},
+      {"id": "AL-COND-newonly", "type": "condition", "clause": "Accidental Damage Protection Plans are only eligible for new items", "applies_when": "the covered item was bought used/refurbished", "effect": "ADH plan ineligible for the item"},
+      {"id": "AL-EXC-theft", "type": "exclusion", "clause": "Neither plan covers intentional damage, loss, theft, or commercial use", "applies_when": "the device was lost or stolen", "effect": "excluded"},
+      {"id": "AL-EXC-commercial", "type": "exclusion", "clause": "Neither plan covers intentional damage, loss, theft, or commercial use", "applies_when": "the device is used for a business / commercial purpose", "effect": "excluded"},
+      {"id": "AL-EXC-intentional", "type": "exclusion", "clause": "Neither plan covers intentional damage, loss, theft, or commercial use", "applies_when": "damage caused on purpose", "effect": "excluded"},
+      {"id": "AL-EXC-cosmetic", "type": "exclusion", "clause": "Cosmetic damage and normal wear and tear are not covered", "applies_when": "scratches/dents that do not impair function", "effect": "excluded"}
+    ]
+  }
+}

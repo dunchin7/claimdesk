@@ -7,7 +7,7 @@ The query path:
        which chunker's chunks it sees).
     4. Optionally filter by document kind / source.
 
-Embedding column is selectable: "ada" (Azure ada-002, default) or "bge"
+Embedding column is selectable: "ada" (OpenAI ada-002, default) or "bge"
 (BAAI/bge-large-en-v1.5, Week-6 open-model comparison). The query embedding
 and the column MUST come from the same model.
 """
@@ -46,7 +46,7 @@ class SearchHit:
 async def _embed_query(query: str, model: EmbeddingModel) -> list[float]:
     """Embed the query with the model that matches the column we'll search.
 
-    ada → Azure managed call. bge → local FastEmbed inference.
+    ada → OpenAI managed call. bge → local FastEmbed inference.
     """
     if model == "ada":
         [vec] = await embed_ada([query])
@@ -69,7 +69,7 @@ async def vector_search(
     `chunker` filters to chunks produced by a specific chunker (useful for
     ablation; in production we pin one chunker via the Week-5 winner).
     `embedding_model` picks which column to search:
-        - "ada" → `chunks.embedding` (Azure text-embedding-ada-002, 1536-dim)
+        - "ada" → `chunks.embedding` (OpenAI text-embedding-ada-002, 1536-dim)
         - "bge" → `chunks.embedding_bge` (BAAI/bge-large-en-v1.5, 1024-dim)
     """
     query_vec = await _embed_query(query, embedding_model)

@@ -12,10 +12,9 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 class Settings(BaseSettings):
     """Application settings.
 
-    NOTE: We use TWO Azure OpenAI resources — one for chat completions, one
-    for embeddings. They have different endpoints, keys, and API versions.
-    The LLM abstraction (`app/ai/llm.py`) routes per model-alias to the right
-    resource.
+    The LLM abstraction (`app/ai/llm.py`) reads the OpenAI settings below and
+    routes every model-alias through a single provider. Point `openai_base_url`
+    at any OpenAI-compatible endpoint to swap providers without code changes.
     """
 
     model_config = SettingsConfigDict(
@@ -30,21 +29,27 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_json: bool = False
 
-    # --- Azure OpenAI: chat resource ---
-    azure_openai_api_key: str = ""
-    azure_openai_endpoint: str = ""
-    azure_openai_api_version: str = "2024-10-21"
-    # Single chat deployment for now. Reasoner/extractor/vision/judge all
-    # alias to this until a separate gpt-4o deployment exists.
-    azure_openai_deployment: str = "gpt-4o-mini"
+    # --- OpenAI ---
+    # One key for chat + embeddings. Set `openai_base_url` to use any
+    # OpenAI-compatible endpoint (a gateway, a local server, etc.).
+    openai_api_key: str = ""
+    openai_base_url: str = ""  # blank = https://api.openai.com/v1
+    # Cheap tier — extraction, vision, and email prose.
+    openai_chat_model: str = "gpt-4o-mini"
+    openai_embedding_model: str = "text-embedding-3-small"
+    # text-embedding-3-small = 1536; ada-002 = 1536; 3-large = 3072.
+    # Drives the pgvector column dimension (see migrations).
+    embedding_dim: int = 1536
 
-    # --- Azure OpenAI: embeddings resource (separate Azure account) ---
-    azure_openai_embedding_api_key: str = ""
-    azure_openai_embedding_endpoint: str = ""
-    azure_openai_embedding_api_version: str = "2023-05-15"
-    azure_openai_embedding_deployment: str = "text-embedding-ada-002"
-    # ada-002 = 1536; 3-small = 1536; 3-large = 3072. Used by pgvector schema.
-    azure_openai_embedding_dim: int = 1536
+    # Frontier tier — the hard reasoning steps (adjudication + the citation
+    # verification judge). Blank fields fall back to the chat model / key /
+    # base above, so the default config is single-model and nothing changes.
+    # Set these to route the `reasoner` and `judge` aliases to a stronger
+    # model — optionally a *different provider* (give it its own key + base;
+    # LiteLLM handles the routing). Extraction and vision stay on the cheap tier.
+    openai_reasoner_model: str = ""
+    openai_reasoner_api_key: str = ""
+    openai_reasoner_base_url: str = ""
 
     # --- Local embeddings (Week 6 BGE comparison) ---
     # BAAI/bge-large-en-v1.5 is 1024-dim. Other BGE variants:
@@ -94,14 +99,11 @@ class Settings(BaseSettings):
 
     @property
     def chat_configured(self) -> bool:
-        return bool(self.azure_openai_api_key and self.azure_openai_endpoint)
+        return bool(self.openai_api_key)
 
     @property
     def embedding_configured(self) -> bool:
-        return bool(
-            self.azure_openai_embedding_api_key
-            and self.azure_openai_embedding_endpoint
-        )
+        return bool(self.openai_api_key)
 
 
 @lru_cache(maxsize=1)

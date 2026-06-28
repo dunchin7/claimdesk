@@ -1,6 +1,6 @@
 """Tests for `chat_with_fallback` (Week 16).
 
-We monkey-patch the wrapped `chat()` function so we don't hit Azure.
+We monkey-patch the wrapped `chat()` function so we don't hit the API.
 The fallback path is exercised by making the first call raise a
 retryable LiteLLM exception and the second call succeed.
 """
@@ -34,10 +34,10 @@ class _FailFirstChat:
     ) -> Any:
         self.calls.append(model_alias)
         if model_alias in self.fail_on_aliases:
-            # Simulate Azure transient failure
+            # Simulate a transient provider failure
             raise litellm.exceptions.APIConnectionError(
                 message="simulated transient error",
-                llm_provider="azure",
+                llm_provider="openai",
                 model=model_alias,
             )
         if kwargs.get("return_cost"):

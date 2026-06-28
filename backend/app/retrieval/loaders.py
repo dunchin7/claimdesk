@@ -55,6 +55,76 @@ def load_markdown(path: Path) -> LoadedDocument:
     )
 
 
+def load_text(path: Path) -> LoadedDocument:
+    """Plain .txt — the lowest-friction way to drop in a policy."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return LoadedDocument(
+        text=text,
+        title=_infer_title(text, path.stem),
+        kind=_infer_kind(path),
+        source_path=str(path),
+        metadata={"format": "text", "byte_size": path.stat().st_size},
+    )
+
+
+def html_to_text(html: str) -> str:
+    """Strip an HTML document to readable text, stdlib-only.
+
+    Policies published as web pages are common; this drops scripts/styles and
+    tags, decodes entities, and collapses whitespace. Good enough to feed the
+    coverage extractor — not a full readability pass.
+    """
+    import re
+    from html import unescape
+    from html.parser import HTMLParser
+
+    skip = {"script", "style", "head", "noscript", "svg"}
+    block = {"p", "div", "br", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6", "section", "article"}
+
+    class _Extractor(HTMLParser):
+        def __init__(self) -> None:
+            super().__init__(convert_charrefs=True)
+            self.parts: list[str] = []
+            self._skip_depth = 0
+
+        def handle_starttag(self, tag: str, attrs: Any) -> None:  # noqa: ANN401
+            if tag in skip:
+                self._skip_depth += 1
+            elif tag in block:
+                self.parts.append("\n")
+
+        def handle_endtag(self, tag: str) -> None:
+            if tag in skip and self._skip_depth:
+                self._skip_depth -= 1
+            elif tag in block:
+                self.parts.append("\n")
+
+        def handle_data(self, data: str) -> None:
+            if self._skip_depth == 0 and data.strip():
+                self.parts.append(data)
+
+    parser = _Extractor()
+    parser.feed(html)
+    text = unescape("".join(parser.parts))
+    # collapse runs of blank lines and trailing spaces
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n[ \t]+", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def load_html(path: Path) -> LoadedDocument:
+    raw = path.read_text(encoding="utf-8", errors="replace")
+    text = html_to_text(raw)
+    return LoadedDocument(
+        text=text,
+        title=_infer_title(text, path.stem),
+        kind=_infer_kind(path),
+        source_path=str(path),
+        metadata={"format": "html", "byte_size": path.stat().st_size},
+    )
+
+
 def load_pdf(path: Path) -> LoadedDocument:
     """Load a PDF. PyMuPDF for text; pdfplumber re-parses table-dense pages.
 
@@ -127,8 +197,12 @@ def load_pdf(path: Path) -> LoadedDocument:
 def load_any(path: Path) -> LoadedDocument:
     """Dispatch by file extension."""
     suffix = path.suffix.lower()
-    if suffix == ".md":
+    if suffix in (".md", ".markdown"):
         return load_markdown(path)
     if suffix == ".pdf":
         return load_pdf(path)
+    if suffix in (".txt", ""):
+        return load_text(path)
+    if suffix in (".html", ".htm"):
+        return load_html(path)
     raise ValueError(f"Unsupported file extension: {suffix} ({path})")

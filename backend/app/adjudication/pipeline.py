@@ -77,6 +77,9 @@ class PipelineResult:
     # available (a real customer in the DB, or an eval claim post-load).
     # None when context can't be built — we don't fabricate features.
     fraud_score: float | None = None
+    # Grounding step 2: did the cited clause actually justify the outcome?
+    # "supports" / "contradicts" / "unrelated" / "not_checked".
+    citation_support: str = "not_checked"
 
 
 async def process_claim(
@@ -96,6 +99,15 @@ async def process_claim(
     # available. If both are None, fraud scoring is skipped honestly.
     claim_id: str | None = None,
     customer_email: str | None = None,
+    # Grounding step 2: verify the cited clause actually supports the outcome
+    # (not just that it's a real substring). Adds one small judge call.
+    verify_support: bool = True,
+    # Adjudicate against arbitrary policy text + a domain-specific prompt
+    # without a file on disk. Used by the Coverage Atlas to decide a claim
+    # against a real plan's terms (e.g. AppleCare+). Both fall back to the
+    # defaults (load_policy(policy_name) + adjudicate_v5) when unset.
+    policy_text_override: str | None = None,
+    adjudicate_prompt_override: str | None = None,
 ) -> PipelineResult:
     """Run the full claim-processing chain.
 
@@ -141,7 +153,12 @@ async def process_claim(
     )
 
     # ---- Step 2: adjudicate ----
-    policy_text = load_policy(policy_name)
+    policy_text = (
+        policy_text_override
+        if policy_text_override is not None
+        else load_policy(policy_name)
+    )
+    full_prompt_name = adjudicate_prompt_override or ADJUDICATE_PROMPT_FULL
 
     retrieved_context: RetrievedContext | None = None
     if use_retrieval:
@@ -155,13 +172,13 @@ async def process_claim(
         adjudicate_prompt_name = ADJUDICATE_PROMPT_RAG
     else:
         adjudicate_prompt = render_prompt(
-            ADJUDICATE_PROMPT_FULL,
+            full_prompt_name,
             policy_text=policy_text,
             extraction=extraction,
             customer_text=safe_raw_input,
             extraction_metadata=None,
         )
-        adjudicate_prompt_name = ADJUDICATE_PROMPT_FULL
+        adjudicate_prompt_name = full_prompt_name
 
     decision, adjudicate_cost = await chat(
         messages=[{"role": "user", "content": adjudicate_prompt}],
@@ -201,6 +218,29 @@ async def process_claim(
             citation=decision.policy_citation[:120],
         )
         decision = decision.model_copy(update={"confidence": "low"})
+
+    # ---- Step 3b: grounding step 2 — does the cited clause SUPPORT the
+    # outcome? A verbatim citation can still be the wrong clause (real policy
+    # text that doesn't justify the decision, or contradicts it). We only
+    # check when the citation is verbatim — a non-verbatim one is already
+    # downgraded above. A bad verdict downgrades confidence + flags review.
+    citation_support = "not_checked"
+    if verify_support and citation_result.verbatim:
+        from app.adjudication.consistency import verify_decision_support
+
+        support = await verify_decision_support(decision, extraction.customer_summary)
+        if support is not None:
+            citation_support = support.verdict
+            if support.verdict != "supports":
+                log.warning(
+                    "adjudicate.citation_unsupported",
+                    verdict=support.verdict,
+                    outcome=decision.outcome,
+                    reasoning=support.reasoning[:160],
+                    citation=decision.policy_citation[:120],
+                )
+                if decision.confidence != "low":
+                    decision = decision.model_copy(update={"confidence": "low"})
 
     # ---- Step 4: draft customer email ----
     email_prompt = render_prompt(
@@ -335,6 +375,18 @@ async def process_claim(
         route = "review"
         route_reasons.append("fraud_score_high")
 
+    # Grounding step 2 override: a verbatim-but-unsupported citation must never
+    # auto-resolve, even if the calibrator is confident. The cited clause
+    # didn't justify the decision, so a human has to look.
+    if citation_support in ("contradicts", "unrelated") and route == "auto_resolve":
+        log.info(
+            "pipeline.citation_unsupported_demotes_route",
+            verdict=citation_support,
+            outcome=decision.outcome,
+        )
+        route = "review"
+        route_reasons.append("citation_unsupported")
+
     # Phase-4 P4.2 safety override — applied LAST so it shadows every other
     # routing decision. The XGBoost calibrator (v3) is trained on synthetic
     # data; the 2026-06-06 real-data mini-eval showed it auto-resolves real
@@ -376,4 +428,5 @@ async def process_claim(
         route=route,
         route_reasons=route_reasons,
         fraud_score=fraud_score,
+        citation_support=citation_support,
     )

@@ -5,8 +5,8 @@ from app.core.logging import _redact_sensitive
 
 def test_redacts_api_key_variants() -> None:
     event = {
-        "azure_openai_api_key": "sk-secret",
-        "azure_openai_embedding_api_key": "another-secret",
+        "openai_api_key": "sk-secret",
+        "embedding_api_key": "another-secret",
         "api_key": "x",
     }
     out = _redact_sensitive(None, "", event)
