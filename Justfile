@@ -29,7 +29,7 @@ migration name:
 test:
     cd backend && uv run pytest tests/ -v -m "not smoke"
 
-# Smoke tests (hits Azure OpenAI; requires real .env)
+# Smoke tests (hits the OpenAI API; requires real .env)
 smoke:
     cd backend && uv run pytest tests/ -v -m smoke
 
@@ -97,6 +97,11 @@ setup:
     cd backend && uv sync
     cd backend && uv run alembic upgrade head
     @echo "ready: try 'just dev' or 'just demo'"
+
+# Consumer-Electronics Coverage Atlas — normalize real plan T&Cs into a cited,
+# comparable schema (regenerates docs/ce_atlas/coverage_atlas_generated.md).
+ce-atlas:
+    uv run --project backend python scripts/build_ce_atlas.py
 
 # 200-claim Phase-4 final eval — current production baseline
 phase4-eval:

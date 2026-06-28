@@ -2,12 +2,11 @@
 
 This module is the **only** place the rest of the app talks to an LLM. Code
 elsewhere imports `chat()` or `embed()` and passes a `model_alias`. Swapping
-providers later (Azure → Anthropic → Bedrock → local Llama) changes
-`MODEL_ALIASES` here and nothing else.
+providers later (OpenAI → Anthropic → Bedrock → local Llama) changes
+`_model_aliases()` here and nothing else.
 
-We use TWO Azure resources (chat + embeddings) with different endpoints/keys/
-api-versions, so the alias map carries the resource config inline rather than
-relying on env-var bridging.
+The default provider is OpenAI via LiteLLM. Set `OPENAI_BASE_URL` to point at
+any OpenAI-compatible endpoint without touching this code.
 
 Depends on:
 - LiteLLM: provider-agnostic completion/embedding API
@@ -34,50 +33,83 @@ from app.core.logging import get_logger
 log = get_logger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
+# Let LiteLLM silently drop params a given model doesn't support (e.g. some
+# frontier/reasoning models reject a non-default `temperature`) instead of
+# raising. Keeps this boundary provider- and tier-agnostic: the same call works
+# whether it lands on a cheap chat model or a frontier reasoner.
+litellm.drop_params = True
 
-class ResourceConfig(TypedDict):
-    """Per-call config for LiteLLM. Bound to a model deployment + Azure resource."""
+
+class ResourceConfig(TypedDict, total=False):
+    """Per-call config for LiteLLM: the model plus credentials."""
 
     model: str
     api_key: str
-    api_base: str
-    api_version: str
+    api_base: str  # optional; only set for an OpenAI-compatible gateway
 
 
-def _chat_resource(deployment: str | None = None) -> ResourceConfig:
+def _chat_resource(model: str | None = None) -> ResourceConfig:
     s = get_settings()
-    return {
-        "model": f"azure/{deployment or s.azure_openai_deployment}",
-        "api_key": s.azure_openai_api_key,
-        "api_base": s.azure_openai_endpoint,
-        "api_version": s.azure_openai_api_version,
+    cfg: ResourceConfig = {
+        "model": model or s.openai_chat_model,
+        "api_key": s.openai_api_key,
     }
+    if s.openai_base_url:
+        cfg["api_base"] = s.openai_base_url
+    return cfg
 
 
 def _embedding_resource() -> ResourceConfig:
     s = get_settings()
-    return {
-        "model": f"azure/{s.azure_openai_embedding_deployment}",
-        "api_key": s.azure_openai_embedding_api_key,
-        "api_base": s.azure_openai_embedding_endpoint,
-        "api_version": s.azure_openai_embedding_api_version,
+    cfg: ResourceConfig = {
+        "model": s.openai_embedding_model,
+        "api_key": s.openai_api_key,
     }
+    if s.openai_base_url:
+        cfg["api_base"] = s.openai_base_url
+    return cfg
+
+
+def _reasoner_resource() -> ResourceConfig:
+    """Frontier tier for the hard reasoning steps.
+
+    Each field falls back to the cheap-tier chat resource when its dedicated
+    setting is blank, so with no config this is identical to `_chat_resource()`
+    and the whole pipeline runs on one model. Set the `openai_reasoner_*`
+    settings to route here — optionally to a different provider (its own key
+    + base), which LiteLLM resolves from the model string.
+    """
+    s = get_settings()
+    cfg: ResourceConfig = {
+        "model": s.openai_reasoner_model or s.openai_chat_model,
+        "api_key": s.openai_reasoner_api_key or s.openai_api_key,
+    }
+    base = s.openai_reasoner_base_url or s.openai_base_url
+    if base:
+        cfg["api_base"] = base
+    return cfg
 
 
 def _model_aliases() -> dict[str, ResourceConfig]:
     """Map of logical alias → resource config.
 
-    Right now `reasoner`, `extractor`, `vision`, and `judge` all collapse to
-    the single chat deployment (gpt-4o-mini). When/if a separate gpt-4o is
-    provisioned, route the heavier aliases there by passing a different
-    deployment name to `_chat_resource()`.
+    Two tiers:
+    - cheap (`extractor`, `vision`): the chat model — high-volume, easy work.
+    - frontier (`reasoner`, `judge`): the hard reasoning — adjudication and
+      the citation-verification judge. Falls back to the chat model unless the
+      `openai_reasoner_*` settings are set, so the default is single-model.
+
+    Email drafting uses the `reasoner` alias too; it's prose, not reasoning,
+    but it rides the frontier tier for free. Split it onto its own alias if
+    you ever want it cheap.
     """
     chat = _chat_resource()
+    reasoner = _reasoner_resource()
     return {
-        "reasoner": chat,
+        "reasoner": reasoner,
         "extractor": chat,
         "vision": chat,
-        "judge": chat,
+        "judge": reasoner,
         "embedder": _embedding_resource(),
     }
 
@@ -97,7 +129,7 @@ def _is_retryable_exception(exc: BaseException) -> bool:
     its own schema-retry budget is exhausted. The wrapped exception bypasses
     our tenacity guard on `_raw_chat` because Instructor calls
     `litellm.acompletion` directly, not via our wrapper. Phase-3 saw 9/10
-    errors from this path under concurrency=8 (Azure rate-limit bursts).
+    errors from this path under concurrency=8 (provider rate-limit bursts).
 
     This predicate is used by `_structured_call_with_retry` to recognize
     the wrapped form and retry the whole structured call.
@@ -239,7 +271,7 @@ async def chat(
     if response_model is not None:
         # `create_with_completion` returns (parsed_model, raw_litellm_response).
         # The raw response has .usage which `litellm.completion_cost()` reads.
-        # We wrap in `_structured_call_with_retry` so Azure rate-limit bursts
+        # We wrap in `_structured_call_with_retry` so provider rate-limit bursts
         # at high concurrency get backed-off rather than failing the call.
         client = instructor.from_litellm(litellm.acompletion)
         result, raw_completion = await _structured_call_with_retry(
@@ -281,12 +313,12 @@ async def chat_with_fallback(
     """Try each alias in order; fall back on retryable errors.
 
     Week-16 production hardening. The retryable set is the same as
-    `chat()` — Azure rate limits, connection errors, timeouts, 5xx —
+    `chat()` — provider rate limits, connection errors, timeouts, 5xx —
     but here we recover by switching aliases instead of just sleeping
     on the same one. Non-retryable errors (auth, bad request, schema
     violation) propagate immediately.
 
-    Today all aliases collapse to the same Azure deployment, so the
+    Today all aliases collapse to the same chat model, so the
     fallback is a no-op in production. Once a separate gpt-4o
     deployment is provisioned, callers can pass `["reasoner-strong",
     "reasoner"]` for a real heavy-then-cheap chain. The infrastructure
@@ -347,7 +379,7 @@ async def embed(
     """Embed one or more strings.
 
     Returns a list of vectors. If `texts` is a single string, returns a list
-    of length 1. Use `model_alias="embedder"` for the default Azure embedding
+    of length 1. Use `model_alias="embedder"` for the default provider embedding
     deployment.
     """
     aliases = _model_aliases()

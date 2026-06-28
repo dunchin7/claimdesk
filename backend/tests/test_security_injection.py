@@ -3,7 +3,7 @@
 Pure-function tests on the escape helper + jailbreak signal detector.
 End-to-end tests against the live model (i.e., "does the Adjudicator
 actually resist an injection attempt") are smoke-test territory because
-they cost an Azure call; see test_smoke.py for those.
+they cost an OpenAI call; see test_smoke.py for those.
 """
 
 from __future__ import annotations

@@ -12,7 +12,7 @@ Each chunker emits `ChunkOut` objects in document order. The ingest pipeline
 consumes these, embeds the (optionally context-prefixed) text, and persists
 to the `chunks` table.
 
-Token counts use `tiktoken` (cl100k_base, the OpenAI/Azure default for
+Token counts use `tiktoken` (cl100k_base, the OpenAI default for
 text-embedding-* and gpt-4o*). For documents that fall outside that
 tokenizer's training set (e.g., heavy CJK), the count is approximate but
 internally consistent across chunkers.

@@ -81,7 +81,7 @@ def main() -> int:
         type=int,
         default=4,
         help="Async concurrency for the eval. Default lowered from 8 to 4 "
-        "post-Phase-3 — concurrency=8 burst-tripped Azure rate limits and "
+        "post-Phase-3 — concurrency=8 burst-tripped API rate limits and "
         "produced 10/200 errors despite the retry wrapper. 4 leaves enough "
         "headroom for the wrapper to recover transient hiccups.",
     )

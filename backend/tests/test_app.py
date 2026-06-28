@@ -1,4 +1,4 @@
-"""App-level wiring tests. These don't hit Azure."""
+"""App-level wiring tests. These don't hit OpenAI."""
 
 from __future__ import annotations
 

@@ -49,7 +49,7 @@ limiter = Limiter(
 )
 
 # Specific named limits, referenced from route decorators.
-LIMIT_PROCESS = "30/minute"     # full pipeline — Azure quota matters
+LIMIT_PROCESS = "30/minute"     # full pipeline — provider rate limits matter
 LIMIT_EXTRACT = "60/minute"     # extraction-only, cheaper
 LIMIT_VISION = "20/minute"      # vision is the costliest call
 LIMIT_RUN_AGENT = "20/minute"   # multi-call agent loop

@@ -163,7 +163,7 @@ async def ingest_one(
         embeddings = await embed_texts(embed_payload)
         if any(len(v) != expected_dim() for v in embeddings):
             raise RuntimeError(
-                "embedding dim mismatch; check AZURE_OPENAI_EMBEDDING_DIM and the model"
+                "embedding dim mismatch; check EMBEDDING_DIM and the model"
             )
 
         await _persist_chunks(
@@ -173,7 +173,7 @@ async def ingest_one(
             chunks=chunks,
             contexts=contexts,
             embeddings=embeddings,
-            embedding_model=f"azure/{get_settings().azure_openai_embedding_deployment}",
+            embedding_model=get_settings().openai_embedding_model,
         )
         await s.commit()
         log.info(

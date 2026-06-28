@@ -14,14 +14,14 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 
-# Azure OpenAI embedding endpoints accept up to 16 inputs per request for
-# ada-002. Higher batch sizes get rejected with `BadRequestError`.
+# Batch size for embedding requests. Conservative default that stays well
+# within provider per-request input limits.
 _MAX_BATCH = 16
 
 
 def expected_dim() -> int:
     """Embedding dimension for the configured model. Drives the pgvector schema."""
-    return get_settings().azure_openai_embedding_dim
+    return get_settings().embedding_dim
 
 
 async def embed_texts(texts: Iterable[str]) -> list[list[float]]:

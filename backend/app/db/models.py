@@ -29,7 +29,7 @@ from app.core.config import get_settings
 
 # Embedding dim from settings — drives the pgvector column type and any
 # downstream comparators.
-_EMBEDDING_DIM = get_settings().azure_openai_embedding_dim
+_EMBEDDING_DIM = get_settings().embedding_dim
 
 
 class Base(DeclarativeBase):

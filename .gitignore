@@ -24,6 +24,15 @@ data/synthetic/*.csv
 data/synthetic/*.json
 # Note: data/policies/*.md is committed (hand-written policy is a real artifact)
 
+# Reserve & Leakage Ledger / experiment outputs — regeneratable via scripts/.
+# (hand-authored claims.jsonl + provisions.json ARE committed)
+data/atlas_experiment/book_*.json
+data/atlas_experiment/results*.json
+data/atlas_experiment/ledger*.json
+data/atlas_experiment/synth_claims.jsonl
+# Generated dashboard (rebuild with scripts/build_dashboard.py); README is committed
+docs/ledger/index.html
+
 # Phase 4.1 real-claim data — PII-minimized but customer-derived. Never committed.
 data/real/
 
